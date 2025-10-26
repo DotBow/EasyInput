@@ -43,6 +43,10 @@ void UEasyInputComponent::BeginPlay()
 		TEXT("Player Controller is invalid!")))
 		return;
 
+	if (!ensureMsgf(InputBindings,
+		TEXT("Input Bindings are invalid!")))
+		return;
+
 	SetInputBindings(
 		PlayerController, InputBindings, Character);
 }
