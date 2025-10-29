@@ -1,5 +1,4 @@
-﻿// Copyright (C) Dreamer's Tail. All Rights Reserved.
-// Authors: @DotBow
+﻿// Copyright (C) Dreamer's Tail
 
 #pragma once
 #include "GameplayTagContainer.h"
@@ -256,11 +255,6 @@ public:
 
 	UPROPERTY(EditAnywhere, meta=(NoElementDuplicate, EditFixedOrder))
 	TArray<FEasyInputAxisBinding> AxisBindings;
-
-	static void SetupKeyBindings(
-		const TObjectPtr<APlayerController>& PlayerController,
-		UObject* Object,
-		const TObjectPtr<UEasyInputBindings>& KeyBindings);
 
 #if WITH_EDITOR
 	static FName GetBindingsMember(const EEasyInputBindingType Type)

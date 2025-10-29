@@ -1,5 +1,4 @@
-// Copyright (C) Dreamer's Tail. All Rights Reserved.
-// Authors: @DotBow
+// Copyright (C) Dreamer's Tail
 
 #include "EasyInput.h"
 

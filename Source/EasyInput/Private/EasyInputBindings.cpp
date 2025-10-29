@@ -1,63 +1,10 @@
-﻿// Copyright (C) Dreamer's Tail. All Rights Reserved.
-// Authors: @DotBow
+﻿// Copyright (C) Dreamer's Tail
 
 #include "EasyInputBindings.h"
-#include "GameFramework/PlayerInput.h"
 
 
 UEasyInputBindings::UEasyInputBindings()
 {
-}
-
-void UEasyInputBindings::SetupKeyBindings(
-	const TObjectPtr<APlayerController>& PlayerController,
-	UObject* Object,
-	const TObjectPtr<UEasyInputBindings>& KeyBindings)
-{
-	if (!ensureMsgf(PlayerController,
-		TEXT("Player Controller is invalid!")))
-		return;
-
-	if (!ensureMsgf(KeyBindings,
-		TEXT("Key Bindings asset is invalid!")))
-		return;
-
-	for (const FEasyInputActionBinding& ActionBinding :
-		KeyBindings->ActionBindings)
-	{
-		for (const FEasyInputActionKey& Key :
-			ActionBinding.GetKeys())
-		{
-			FInputKeyBinding KB(FInputChord(
-				Key.GetKey(), Key.GetShift(),
-				Key.GetCtrl(), Key.GetAlt(), false),
-				ActionBinding.GetInputEvent());
-			KB.KeyDelegate.BindDelegate(
-				Object, ActionBinding.GetFunctionName());
-			PlayerController->InputComponent->KeyBindings.Emplace(
-				MoveTemp(KB));
-		}
-	}
-
-	for (const FEasyInputAxisBinding& AxisBinding :
-		KeyBindings->AxisBindings)
-	{
-		for (const FKey& Key : AxisBinding.GetKeys())
-		{
-			FInputAxisKeyMapping Mapping(
-				AxisBinding.GetFunctionName(),
-				Key,
-				AxisBinding.GetScale());
-			PlayerController->PlayerInput->AxisMappings.Emplace(
-				MoveTemp(Mapping));
-
-			FInputAxisBinding AB(AxisBinding.GetFunctionName());
-			AB.AxisDelegate.BindDelegate(
-				Object, AxisBinding.GetFunctionName());
-			PlayerController->InputComponent->AxisBindings.Emplace(
-				MoveTemp(AB));
-		}
-	}
 }
 
 #if WITH_EDITOR

@@ -4,6 +4,7 @@
 
 #include "EasyInputBindings.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerInput.h"
 
 
 UEasyInputComponent::UEasyInputComponent()
@@ -30,17 +31,17 @@ void UEasyInputComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ACharacter* Character = Cast<ACharacter>(GetOwner());
-
-	if (!ensureMsgf(Character,
-		TEXT("UEasyInputComponent requires ACharacter outer!")))
-		return;
-
-	APlayerController* PlayerController = Cast<APlayerController>(
-		Character->GetController());
+	APlayerController* PlayerController = Cast<APlayerController>(GetOwner());
 
 	if (!ensureMsgf(PlayerController,
-		TEXT("Player Controller is invalid!")))
+		TEXT("UEasyInputComponent requires Player Controller outer!")))
+		return;
+
+	ACharacter* Character = Cast<ACharacter>(
+		PlayerController->GetPawn());
+
+	if (!ensureMsgf(Character,
+		TEXT("Character is invalid")))
 		return;
 
 	if (!ensureMsgf(InputBindings,
@@ -48,18 +49,52 @@ void UEasyInputComponent::BeginPlay()
 		return;
 
 	SetInputBindings(
-		PlayerController, InputBindings, Character);
+		PlayerController, Character);
 }
 
 void UEasyInputComponent::SetInputBindings(
 	const TObjectPtr<APlayerController>& PlayerController,
-	UEasyInputBindings* InInputBindings,
-	UObject* Object)
+	const TObjectPtr<ACharacter>& Character)
 {
-	if (!InputTags.HasTag(InInputBindings->InputTag))
+	if (!InputTags.HasTag(InputBindings->InputTag))
 	{
-		UEasyInputBindings::SetupKeyBindings(
-			PlayerController, Object, InInputBindings);
-		InputTags.AddTag(InInputBindings->InputTag);
+		for (const FEasyInputActionBinding& ActionBinding :
+			InputBindings->ActionBindings)
+		{
+			for (const FEasyInputActionKey& Key :
+				ActionBinding.GetKeys())
+			{
+				FInputKeyBinding KB(FInputChord(
+					Key.GetKey(), Key.GetShift(),
+					Key.GetCtrl(), Key.GetAlt(), false),
+					ActionBinding.GetInputEvent());
+				KB.KeyDelegate.BindDelegate(
+					Character, ActionBinding.GetFunctionName());
+				PlayerController->InputComponent->KeyBindings.Emplace(
+					MoveTemp(KB));
+			}
+		}
+
+		for (const FEasyInputAxisBinding& AxisBinding :
+			InputBindings->AxisBindings)
+		{
+			for (const FKey& Key : AxisBinding.GetKeys())
+			{
+				FInputAxisKeyMapping Mapping(
+					AxisBinding.GetFunctionName(),
+					Key,
+					AxisBinding.GetScale());
+				PlayerController->PlayerInput->AxisMappings.Emplace(
+					MoveTemp(Mapping));
+
+				FInputAxisBinding AB(AxisBinding.GetFunctionName());
+				AB.AxisDelegate.BindDelegate(
+					Character, AxisBinding.GetFunctionName());
+				PlayerController->InputComponent->AxisBindings.Emplace(
+					MoveTemp(AB));
+			}
+		}
+
+		InputTags.AddTag(InputBindings->InputTag);
 	}
 }

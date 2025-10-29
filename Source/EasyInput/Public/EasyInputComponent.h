@@ -7,7 +7,7 @@
 #include "EasyInputComponent.generated.h"
 
 
-UCLASS(Within=Character, ClassGroup=(Input), meta=(BlueprintSpawnableComponent))
+UCLASS(Within=PlayerController, ClassGroup=(Input), meta=(BlueprintSpawnableComponent))
 class EASYINPUT_API UEasyInputComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -35,6 +35,5 @@ protected:
 
 	void SetInputBindings(
 		const TObjectPtr<APlayerController>& PlayerController,
-		UEasyInputBindings* InInputBindings,
-		UObject* Object);
+		const TObjectPtr<ACharacter>& Character);
 };
