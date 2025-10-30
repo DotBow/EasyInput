@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "EasyInputComponent.generated.h"
 
@@ -15,25 +14,17 @@ class EASYINPUT_API UEasyInputComponent : public UActorComponent
 public:
 	UEasyInputComponent();
 
-	FGameplayTag GetActiveInputTag() const;
-
-	void SetActiveInputTag(
-		const FGameplayTag& InActiveInputTag);
+	void RegisterWidgetInputs(
+		class UCommonUserWidget* Widget) const;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category=Input)
 	TObjectPtr<class UEasyInputBindings> InputBindings;
-
-	UPROPERTY()
-	FGameplayTagContainer InputTags;
-
-	UPROPERTY(VisibleAnywhere)
-	FGameplayTag ActiveInputTag;
 
 protected:
 	virtual void BeginPlay() override;
 
 	void SetInputBindings(
 		const TObjectPtr<APlayerController>& PlayerController,
-		const TObjectPtr<ACharacter>& Character);
+		const TObjectPtr<ACharacter>& Character) const;
 };

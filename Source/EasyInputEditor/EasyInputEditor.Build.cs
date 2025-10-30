@@ -10,41 +10,37 @@ public class EasyInputEditor : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicIncludePaths.AddRange(
-			new string[] {
-				// ... add public include paths required here ...
-			});
+		new string[] {
+		});
 
 		PrivateIncludePaths.AddRange(
-			new string[] {
-				// ... add other private include paths required here ...
-			});
+		new string[] {
+		});
 
 		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
-				"EasyInput",
-				// ... add other public dependencies that you statically link with here ...
-			});
+		new string[]
+		{
+			"Core",
+			"EasyInput",
+		});
 
 		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"CoreUObject",
-				"Engine",
-				"UnrealEd",
-				"SlateCore",
-				"Slate",
-				"Projects",
-				"PropertyEditor",
-				"InputCore",
-				// ... add private dependencies that you statically link with here ...
-			});
+		new string[]
+		{
+			"CoreUObject",
+			"Engine",
+			"UnrealEd",
+			"SlateCore",
+			"Slate",
+			"Projects",
+			"PropertyEditor",
+			"InputCore",
+			"GameplayTags"
+		});
 
 		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				// ... add any modules that your module loads dynamically here ...
-			});
+		new string[]
+		{
+		});
 	}
 }

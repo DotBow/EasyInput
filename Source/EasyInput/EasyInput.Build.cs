@@ -22,6 +22,8 @@ public class EasyInput : ModuleRules
 			"Core",
 			"InputCore",
 			"EnhancedInput",
+			"GameplayTags",
+			"CommonUI",
 			"GameplayTags"
 		});
 

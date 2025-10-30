@@ -1,5 +1,4 @@
-﻿// Copyright (C) MAG Development Ltd. 2024. All Rights Reserved.
-// Authors: @o.stepanov
+﻿// Copyright (C) Dreamer's Tail
 
 #include "Customization/EasyInputKeyBindingsCustomization.h"
 
@@ -181,54 +180,6 @@ void FEasyInputBindingsCustomization::CustomizeDetails(
 
 	DetailBuilder.HideCategory("EasyInputBindings");
 
-	IDetailPropertyRow& InputTagRow = DetailBuilder.AddPropertyToCategory(
-		DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UEasyInputBindings, InputTag)));
-	TSharedPtr<SWidget> OutInputTagNameWidget;
-	TSharedPtr<SWidget> OutInputTagValueWidget;
-	InputTagRow.GetDefaultWidgets(
-		OutInputTagNameWidget, OutInputTagValueWidget);
-
-	IDetailCategoryBuilder& InputTagCategory =
-		DetailBuilder.EditCategory("Input Tag");
-	InputTagCategory.HeaderContent(
-	SNew(SHorizontalBox)
-	+SHorizontalBox::Slot()
-	.HAlign(HAlign_Left)
-	.VAlign(VAlign_Center)
-	.AutoWidth()
-	[
-		SNew(STextBlock)
-		.Text(FText::FromName("Input Tag"))
-	], true);
-	InputTagCategory.AddCustomRow(
-	FText::FromString(TEXT("InputTag")))
-	.WholeRowWidget
-	[
-		SNew(SHorizontalBox)
-		+SHorizontalBox::Slot()
-		.AutoWidth()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Center)
-		.Padding(4)
-		[
-			SNew(SImage)
-			.DesiredSizeOverride(FVector2D(16, 16))
-			.Image(FSlateIcon(FName("InsightsStyle"),
-				"Icons.MemTagTreeView").GetIcon())
-		]
-		+SHorizontalBox::Slot()
-		.AutoWidth()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Center)
-		[
-			SNew(SBox)
-			.WidthOverride(256)
-			[
-				OutInputTagValueWidget.ToSharedRef()
-			]
-		]
-	];
-
 	IDetailCategoryBuilder& FunctionsSourceCategory =
 		DetailBuilder.EditCategory("Functions Source");
 	FunctionsSourceCategory.HeaderContent(
@@ -265,8 +216,8 @@ void FEasyInputBindingsCustomization::CustomizeDetails(
 			SNew(SBox)
 			.WidthOverride(256)
 			[
-				DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(
-					UEasyInputBindings, FunctionsSource))->CreatePropertyValueWidget()
+				DetailBuilder.GetProperty(
+					UEasyInputBindings::GetFunctionSourceMember())->CreatePropertyValueWidget()
 			]
 		]
 	];
@@ -649,7 +600,7 @@ bool SEasyInputFunctions::IsComboEnabled() const
 		TEXT("Input Bindings is invalid!")))
 		return false;
 
-	return !InputBindings->FunctionsSource.IsNull();
+	return !InputBindings->GetFunctionsSource().IsNull();
 }
 
 #undef LOCTEXT_NAMESPACE

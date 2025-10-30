@@ -1,5 +1,4 @@
-﻿// Copyright (C) MAG Development Ltd. 2024. All Rights Reserved.
-// Authors: @o.stepanov
+﻿// Copyright (C) Dreamer's Tail
 
 #include "EasyInputEditorStyle.h"
 #include "Interfaces/IPluginManager.h"

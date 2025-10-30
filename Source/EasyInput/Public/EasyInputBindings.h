@@ -1,7 +1,8 @@
 ﻿// Copyright (C) Dreamer's Tail
 
 #pragma once
-#include "GameplayTagContainer.h"
+
+#include "Input/CommonUIInputSettings.h"
 #include "EasyInputBindings.generated.h"
 
 
@@ -26,7 +27,8 @@ public:
 	}
 
 #if WITH_EDITOR
-	void SetFunctionName(const FString InName)
+	void SetFunctionName(
+		const FString& InName)
 	{
 		FunctionName = InName;
 	}
@@ -242,9 +244,7 @@ class EASYINPUT_API UEasyInputBindings : public UDataAsset
 public:
 	UEasyInputBindings();
 
-	UPROPERTY(EditAnywhere, meta=(DisallowCreateNew))
-	FGameplayTag InputTag;
-
+private:
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, meta=(DisallowCreateNew))
 	TSoftClassPtr<AActor> FunctionsSource;
@@ -256,7 +256,41 @@ public:
 	UPROPERTY(EditAnywhere, meta=(NoElementDuplicate, EditFixedOrder))
 	TArray<FEasyInputAxisBinding> AxisBindings;
 
+	UPROPERTY(EditAnywhere, meta=(NoElementDuplicate, EditFixedOrder), Category=Test)
+	TArray<FUIInputAction> UIActionBindings;
+
+public:
 #if WITH_EDITOR
+	TSoftClassPtr<AActor> GetFunctionsSource() const
+	{
+		return FunctionsSource;
+	};
+#endif
+
+	const TArray<FEasyInputActionBinding>& GetActionBindings() const
+	{
+		return ActionBindings;
+	}
+
+	const TArray<FEasyInputAxisBinding>& GetAxisBindings() const
+	{
+		return AxisBindings;
+	}
+
+	const TArray<FUIInputAction>& GetUIActionBindings() const
+	{
+		return UIActionBindings;
+	}
+
+#if WITH_EDITOR
+	static FName GetFunctionSourceMember()
+	{
+		return GET_MEMBER_NAME_CHECKED(
+			UEasyInputBindings, FunctionsSource);
+	}
+
+	void UpdateUIInputSettings();
+
 	static FName GetBindingsMember(const EEasyInputBindingType Type)
 	{
 		if (Type == EEasyInputBindingType::Action)
