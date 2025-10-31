@@ -1,5 +1,4 @@
-﻿// Copyright (C) Dreamer's Tail. All Rights Reserved.
-// Authors: @DotBow
+﻿// Copyright (C) Dreamer's Tail
 
 #pragma once
 
@@ -8,6 +7,109 @@
 #include "Factories/DataAssetFactory.h"
 #include "EasyInputBindings.h"
 #include "EasyInputKeyBindingsAsset.generated.h"
+
+
+class SEasyInputDetails : public SCompoundWidget
+{
+public:
+	SLATE_BEGIN_ARGS(SEasyInputDetails) {}
+	SLATE_END_ARGS();
+
+	void Construct(
+		const FArguments& InArgs,
+		UEasyInputBindings* InInputBindings);
+
+protected:
+	UEasyInputBindings* InputBindings = nullptr;
+	TSharedPtr<IDetailsView> DetailsView;
+
+	void Draw();
+};
+
+
+class SEasyInputCategories : public SCompoundWidget
+{
+public:
+	SLATE_BEGIN_ARGS(SEasyInputCategories) {}
+	SLATE_END_ARGS();
+
+	void Construct(
+		const FArguments& InArgs,
+		UEasyInputBindings* InInputBindings);
+
+protected:
+	UEasyInputBindings* InputBindings = nullptr;
+
+	void Draw();
+};
+
+
+class SEasyInputBindingType : public SCompoundWidget
+{
+public:
+	SLATE_BEGIN_ARGS(SEasyInputBindingType) {}
+	SLATE_ARGUMENT(EEasyInputBindingType, BindingType)
+	SLATE_ARGUMENT(FText, Label)
+	SLATE_ATTRIBUTE(const FSlateBrush*, Image)
+SLATE_END_ARGS();
+
+	void Construct(
+		const FArguments& InArgs,
+		UEasyInputBindings* InInputBindings);
+
+private:
+	EEasyInputBindingType BindingType = EEasyInputBindingType::Action;
+	UEasyInputBindings* InputBindings = nullptr;
+
+	FReply OnClicked() const;
+};
+
+
+class FEasyInputBindingsToolkit final : public FAssetEditorToolkit
+{
+public:
+	void InitEditor(
+		const TArray<UObject*>& InObjects);
+
+protected:
+	virtual void RegisterTabSpawners(
+		const TSharedRef<FTabManager>& TabManager) override;
+	virtual void UnregisterTabSpawners(
+		const TSharedRef<FTabManager>& TabManager) override;
+	void AddToolbarExtension(
+		FToolBarBuilder& ToolbarBuilder) const;
+
+	virtual FName GetToolkitFName() const override
+	{
+		return "EasyInputBindingsEditor";
+	}
+
+	virtual FText GetBaseToolkitName() const override
+	{
+		return INVTEXT("Easy Input Bindings Editor");
+	}
+
+	virtual FString GetWorldCentricTabPrefix() const override
+	{
+		return "Easy Input Bindings Editor ";
+	}
+
+	virtual FLinearColor GetWorldCentricTabColorScale() const override
+	{
+		return {};
+	}
+
+	UEasyInputBindings* InputBindings = nullptr;
+	static const FName DetailsTabId;
+
+	TSharedPtr<SEasyInputDetails> Details;
+
+public:
+	UEasyInputBindings* GetInputBindings() const
+	{
+		return InputBindings;
+	}
+};
 
 
 UCLASS()
@@ -53,6 +155,10 @@ public:
 	{
 		return AssetCategory;
 	}
+
+	virtual void OpenAssetEditor(
+		const TArray<UObject*>& InObjects,
+		TSharedPtr<IToolkitHost> EditWithinLevelEditor) override;
 
 private:
 	EAssetTypeCategories::Type AssetCategory =

@@ -4,6 +4,8 @@
 #include "EasyInputBindings.h"
 #include "IDetailCustomization.h"
 
+class IDetailGroup;
+class FEasyInputBindingsToolkit;
 enum class EEasyInputBindingType : uint8;
 class UEasyInputBindings;
 
@@ -89,7 +91,11 @@ private:
 
 	void CustomizeBindings(
 		IDetailLayoutBuilder& DetailBuilder,
-		const FName& CategoryName,
+		const EEasyInputBindingType Type) const;
+	TSharedRef<SWidget> GetBindingHeader(
+		IDetailGroup& BindingGroup,
+		const TSharedRef<IPropertyHandle>& BindingHandle,
+		const int32 BindingIdx,
 		const EEasyInputBindingType Type) const;
 
 	UEasyInputBindings* InputBindings = nullptr;
@@ -128,10 +134,10 @@ private:
 
 	TArray<TSharedPtr<FString>> Functions;
 
-	TSharedRef<SWidget> OnGenerateWidget(
+	static TSharedRef<SWidget> OnGenerateWidget(
 		TSharedPtr<FString> String);
 	void OnSelectionChanged(
 		TSharedPtr<FString> String,
-		ESelectInfo::Type SelectInfo);
+		ESelectInfo::Type SelectInfo) const;
 	bool IsComboEnabled() const;
 };

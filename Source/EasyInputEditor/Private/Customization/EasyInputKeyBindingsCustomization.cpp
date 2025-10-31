@@ -175,68 +175,30 @@ void FEasyInputBindingsCustomization::CustomizeDetails(
 	IDetailLayoutBuilder& DetailBuilder)
 {
 	TArray<TWeakObjectPtr<>> Objects;
+
 	DetailBuilder.GetObjectsBeingCustomized(Objects);
 	InputBindings = Cast<UEasyInputBindings>(Objects[0]);
 
 	DetailBuilder.HideCategory("EasyInputBindings");
 
-	IDetailCategoryBuilder& FunctionsSourceCategory =
-		DetailBuilder.EditCategory("Functions Source");
-	FunctionsSourceCategory.HeaderContent(
-	SNew(SHorizontalBox)
-	+SHorizontalBox::Slot()
-	.HAlign(HAlign_Left)
-	.VAlign(VAlign_Center)
-	.AutoWidth()
-	[
-		SNew(STextBlock)
-		.Text(FText::FromName("Functions Source"))
-	], true);
-	FunctionsSourceCategory.AddCustomRow(
-	FText::FromString(TEXT("FunctionsSource")))
-	.WholeRowWidget
-	[
-		SNew(SHorizontalBox)
-		+SHorizontalBox::Slot()
-		.AutoWidth()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Center)
-		.Padding(4)
-		[
-			SNew(SImage)
-			.DesiredSizeOverride(FVector2D(16, 16))
-			.Image(FAppStyle::Get().GetBrush(
-				"MainFrame.OpenSourceCodeEditor"))
-		]
-		+SHorizontalBox::Slot()
-		.AutoWidth()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Center)
-		[
-			SNew(SBox)
-			.WidthOverride(256)
-			[
-				DetailBuilder.GetProperty(
-					UEasyInputBindings::GetFunctionSourceMember())->CreatePropertyValueWidget()
-			]
-		]
-	];
-
-	CustomizeBindings(
-		DetailBuilder,
-		"Action Bindings",
-		EEasyInputBindingType::Action);
-	CustomizeBindings(
-		DetailBuilder,
-		"Axis Bindings",
-		EEasyInputBindingType::Axis);
+	CustomizeBindings(DetailBuilder,
+		InputBindings->GetActiveBindingType());
 }
 
 void FEasyInputBindingsCustomization::CustomizeBindings(
 	IDetailLayoutBuilder& DetailBuilder,
-	const FName& CategoryName,
 	const EEasyInputBindingType Type) const
 {
+	FName CategoryName = "Unknown Category";
+
+	if (Type == EEasyInputBindingType::Action)
+		CategoryName = "Action Bindings";
+	else if (Type == EEasyInputBindingType::Axis)
+		CategoryName = "Axis Bindings";
+	else if (Type == EEasyInputBindingType::UI)
+		CategoryName = "UI Action Bindings";
+
+	/* Create category category with add and empty buttons */
 	IDetailCategoryBuilder& BindingsCategory =
 		DetailBuilder.EditCategory(CategoryName);
 	BindingsCategory.HeaderContent(
@@ -276,6 +238,7 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 		}))
 	], true);
 
+	/* Get array of bindings */
 	const TSharedRef<IPropertyHandle> BindingsHandle =
 		DetailBuilder.GetProperty(UEasyInputBindings::GetBindingsMember(Type));
 	const TSharedPtr<IPropertyHandleArray> BindingsArray =
@@ -283,6 +246,7 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 	uint32 NumBindings;
 	BindingsArray->GetNumElements(NumBindings);
 
+	/* If array of bindings is empty then report */
 	if (NumBindings == 0)
 	{
 		BindingsCategory.AddCustomRow(
@@ -303,12 +267,19 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 		];
 	}
 
+	/* Draw each binding in a loop */
 	for (int32 BindingIdx = static_cast<int32>(NumBindings) - 1;
 		BindingIdx >= 0; BindingIdx--)
 	{
 		const TSharedRef<IPropertyHandle> BindingHandle =
 			BindingsArray->GetElement(BindingIdx);
 
+		/*
+		 * Draw binding header
+		 * - functions selector/tag icon
+		 * - function name/tag
+		 * - delete button
+		 */
 		IDetailGroup& BindingGroup = BindingsCategory.AddGroup(
 			FName("BindingGroup"), FText::GetEmpty());
 		BindingGroup.HeaderRow()
@@ -317,25 +288,7 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 			+SHorizontalBox::Slot()
 			.AutoWidth()
 			[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SEasyInputFunctions)
-					.InputBindings(InputBindings)
-					.BindingType(Type)
-					.BindingKey(BindingIdx)
-				]
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				.Padding(2)
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SEasyInputRow)
-					.PropertyHandle(BindingHandle)
-					.PropertyName(FEasyInputBinding::GetFunctionMember())
-				]
+				GetBindingHeader(BindingGroup, BindingHandle, BindingIdx, Type)
 			]
 			+SHorizontalBox::Slot()
 			.HAlign(HAlign_Left)
@@ -354,6 +307,7 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 			.FillWidth(1.f)
 		];
 
+		/* Draw keys array */
 		IDetailGroup& KeysGroup = BindingGroup.AddGroup(
 			FName("KeysGroup"), FText::GetEmpty());
 		KeysGroup.HeaderRow()
@@ -395,6 +349,7 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 			.FillWidth(1.f)
 		];
 
+		/* Draw key widget for each binding type */
 		if (Type == EEasyInputBindingType::Action)
 		{
 			const TSharedPtr<IPropertyHandle> KeysHandle =
@@ -470,7 +425,53 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 				];
 			}
 		}
+		else if (Type == EEasyInputBindingType::UI)
+		{
+			const TSharedPtr<IPropertyHandle> KeysHandle =
+				BindingHandle->GetChildHandle(
+					GET_MEMBER_NAME_CHECKED(FUIInputAction, KeyMappings));
+			const TSharedPtr<IPropertyHandleArray> KeysArray =
+				KeysHandle->AsArray();
+			uint32 NumKeys;
+			KeysArray->GetNumElements(NumKeys);
 
+			for (int32 KeyIdx = static_cast<int32>(NumKeys) - 1;
+				KeyIdx >= 0; KeyIdx--)
+			{
+				const TSharedRef<IPropertyHandle> KeyMappingHandle =
+					KeysArray->GetElement(KeyIdx);
+				const TSharedPtr<IPropertyHandle> KeyHandle =
+					KeyMappingHandle->GetChildHandle(
+						GET_MEMBER_NAME_CHECKED(FUIActionKeyMapping, Key));
+
+				IDetailPropertyRow& KeyPropertyRow =
+					KeysGroup.AddPropertyRow(KeyHandle.ToSharedRef());
+
+				TSharedPtr<SWidget> OutKeyNameWidget;
+				TSharedPtr<SWidget> OutKeyValueWidget;
+				KeyPropertyRow.GetDefaultWidgets(
+					OutKeyNameWidget, OutKeyValueWidget);
+				KeyPropertyRow.Visibility(EVisibility::Collapsed);
+
+				KeysGroup.AddWidgetRow()
+				.WholeRowWidget
+				[
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
+					.VAlign(VAlign_Center)
+					.AutoWidth()
+					[
+						SNew(SBox)
+						.WidthOverride(200)
+						[
+							OutKeyValueWidget.ToSharedRef()
+						]
+					]
+				];
+			}
+		}
+
+		/* Additional event/scale property */
 		if (Type == EEasyInputBindingType::Action)
 		{
 			BindingGroup.AddWidgetRow().WholeRowWidget
@@ -494,6 +495,71 @@ void FEasyInputBindingsCustomization::CustomizeBindings(
 	}
 }
 
+TSharedRef<SWidget> FEasyInputBindingsCustomization::GetBindingHeader(
+	IDetailGroup& BindingGroup,
+	const TSharedRef<IPropertyHandle>& BindingHandle,
+	const int32 BindingIdx,
+	const EEasyInputBindingType Type) const
+{
+	if (Type == EEasyInputBindingType::UI)
+	{
+		IDetailPropertyRow& PropertyRow =
+			BindingGroup.AddPropertyRow(BindingHandle->GetChildHandle(
+				GET_MEMBER_NAME_CHECKED(FUIInputAction, ActionTag)).ToSharedRef());
+
+		TSharedPtr<SWidget> OutNameWidget;
+		TSharedPtr<SWidget> OutValueWidget;
+		PropertyRow.GetDefaultWidgets(
+			OutNameWidget, OutValueWidget);
+		PropertyRow.Visibility(EVisibility::Collapsed);
+
+		return
+		SNew(SHorizontalBox)
+		+SHorizontalBox::Slot()
+		.AutoWidth()
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SImage)
+			.DesiredSizeOverride(FVector2D(16, 16))
+			.Image(FAppStyle::Get().GetBrush("Icons.Tag"))
+		]
+		+SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(2)
+		+SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SBox)
+			.WidthOverride(200)
+			[
+				OutValueWidget.ToSharedRef()
+			]
+		];
+	}
+
+	return
+	SNew(SHorizontalBox)
+	+SHorizontalBox::Slot()
+	.AutoWidth()
+	[
+		SNew(SEasyInputFunctions)
+		.InputBindings(InputBindings)
+		.BindingType(Type)
+		.BindingKey(BindingIdx)
+	]
+	+SHorizontalBox::Slot()
+	.AutoWidth()
+	.Padding(2)
+	+SHorizontalBox::Slot()
+	.AutoWidth()
+	[
+		SNew(SEasyInputRow)
+		.PropertyHandle(BindingHandle)
+		.PropertyName(FEasyInputBinding::GetFunctionMember())
+	];
+}
+
 
 void SEasyInputRow::Construct(const FArguments& InArgs)
 {
@@ -513,16 +579,22 @@ void SEasyInputRow::Construct(const FArguments& InArgs)
 		];
 	}
 
-	Content->AddSlot()
-	.AutoWidth()
-	[
-		SNew(SBox)
-		.WidthOverride(200)
-		[
-			InArgs._PropertyHandle->GetChildHandle(
-				InArgs._PropertyName)->CreatePropertyValueWidget()
-		]
-	];
+	if (InArgs._PropertyHandle)
+	{
+		if (const TSharedPtr<IPropertyHandle> ChildHandle =
+			InArgs._PropertyHandle->GetChildHandle(InArgs._PropertyName))
+		{
+			Content->AddSlot()
+			.AutoWidth()
+			[
+				SNew(SBox)
+				.WidthOverride(200)
+				[
+					ChildHandle->CreatePropertyValueWidget()
+				]
+			];
+		}
+	}
 
 	Content->AddSlot()
 	.FillWidth(0.8f);
@@ -557,7 +629,7 @@ void SEasyInputFunctions::Construct(const FArguments& InArgs)
 		.ToolTipText(FText::FromString(
 			"Select the function to use"))
 		.OptionsSource(&Functions)
-		.OnGenerateWidget(this,
+		.OnGenerateWidget_Static(
 			&SEasyInputFunctions::OnGenerateWidget)
 		.OnSelectionChanged(this,
 			&SEasyInputFunctions::OnSelectionChanged)
@@ -584,7 +656,7 @@ TSharedRef<SWidget> SEasyInputFunctions::OnGenerateWidget(
 
 void SEasyInputFunctions::OnSelectionChanged(
 	TSharedPtr<FString> String,
-	ESelectInfo::Type SelectInfo)
+	ESelectInfo::Type SelectInfo) const
 {
 	if (!ensureMsgf(InputBindings,
 		TEXT("Input Bindings is invalid!")))

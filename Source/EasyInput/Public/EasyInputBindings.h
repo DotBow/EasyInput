@@ -179,6 +179,7 @@ enum class EEasyInputBindingType : uint8
 {
 	Action = 1 << 0,
 	Axis   = 2 << 0,
+	UI     = 3 << 0,
 };
 #endif
 
@@ -246,7 +247,11 @@ public:
 
 private:
 #if WITH_EDITORONLY_DATA
-	UPROPERTY(EditAnywhere, meta=(DisallowCreateNew))
+	EEasyInputBindingType ActiveBindingType = EEasyInputBindingType::Action;
+	FSimpleMulticastDelegate OnCategoryChanged;
+
+	UPROPERTY(EditAnywhere, meta=(DisallowCreateNew,
+		AllowedClasses="/Script/Engine.Character"))
 	TSoftClassPtr<AActor> FunctionsSource;
 #endif
 
@@ -256,11 +261,27 @@ private:
 	UPROPERTY(EditAnywhere, meta=(NoElementDuplicate, EditFixedOrder))
 	TArray<FEasyInputAxisBinding> AxisBindings;
 
-	UPROPERTY(EditAnywhere, meta=(NoElementDuplicate, EditFixedOrder), Category=Test)
+	UPROPERTY(EditAnywhere, meta=(NoElementDuplicate, EditFixedOrder))
 	TArray<FUIInputAction> UIActionBindings;
 
 public:
 #if WITH_EDITOR
+	EEasyInputBindingType GetActiveBindingType() const
+	{
+		return ActiveBindingType;
+	}
+
+	void SetActiveBindingType(
+		const EEasyInputBindingType InActiveBindingType)
+	{
+		ActiveBindingType = InActiveBindingType;
+	}
+
+	FSimpleMulticastDelegate& GetOnCategoryChanged()
+	{
+		return OnCategoryChanged;
+	}
+
 	TSoftClassPtr<AActor> GetFunctionsSource() const
 	{
 		return FunctionsSource;
@@ -297,6 +318,8 @@ public:
 			return GET_MEMBER_NAME_CHECKED(UEasyInputBindings, ActionBindings);
 		if (Type == EEasyInputBindingType::Axis)
 			return GET_MEMBER_NAME_CHECKED(UEasyInputBindings, AxisBindings);
+		if (Type == EEasyInputBindingType::UI)
+			return GET_MEMBER_NAME_CHECKED(UEasyInputBindings, UIActionBindings);
 
 		return NAME_None;
 	}
@@ -309,6 +332,8 @@ public:
 			ActionBindings.Add(FEasyInputActionBinding());
 		else if (Type == EEasyInputBindingType::Axis)
 			AxisBindings.Add(FEasyInputAxisBinding());
+		else if (Type == EEasyInputBindingType::UI)
+			UIActionBindings.Add(FUIInputAction());
 	}
 
 	void DeleteBinding(
@@ -321,6 +346,8 @@ public:
 			ActionBindings.RemoveAt(BindingIdx);
 		else if (Type == EEasyInputBindingType::Axis)
 			AxisBindings.RemoveAt(BindingIdx);
+		else if (Type == EEasyInputBindingType::UI)
+			UIActionBindings.RemoveAt(BindingIdx);
 	}
 
 	void EmptyBindings(
@@ -332,6 +359,8 @@ public:
 			ActionBindings.Empty();
 		else if (Type == EEasyInputBindingType::Axis)
 			AxisBindings.Empty();
+		else if (Type == EEasyInputBindingType::UI)
+			UIActionBindings.Empty();
 	}
 
 	void AddBindingKey(
